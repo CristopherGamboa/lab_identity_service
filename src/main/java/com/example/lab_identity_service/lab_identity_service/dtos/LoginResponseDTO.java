@@ -9,7 +9,6 @@ import java.util.Set;
 @Builder
 public class LoginResponseDTO {
     private String accessToken;
-    private String tokenType = "Bearer";
     private Long userId;
     private String email;
     private Set<String> roles;

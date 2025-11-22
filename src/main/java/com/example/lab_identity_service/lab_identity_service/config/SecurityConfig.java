@@ -41,6 +41,15 @@ public class SecurityConfig {
         http
             // Deshabilitar CSRF (común en APIs REST sin estado)
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(request -> {
+                var corsConfig = new org.springframework.web.cors.CorsConfiguration();
+
+                corsConfig.setAllowedOrigins(java.util.List.of("*"));
+                corsConfig.setAllowedMethods(java.util.List.of("*"));
+                corsConfig.setAllowedHeaders(java.util.List.of("*"));
+                
+                return corsConfig;
+            }))
             
             // Configurar reglas de autorización
             .authorizeHttpRequests(auth -> auth

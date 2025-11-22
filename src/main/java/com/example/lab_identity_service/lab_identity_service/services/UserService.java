@@ -17,6 +17,8 @@ import com.example.lab_identity_service.lab_identity_service.services.interfaces
 import com.example.lab_identity_service.lab_identity_service.repositories.IRoleRepository;
 
 import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,12 +47,19 @@ public class UserService implements IUserService {
         String hashedPassword = passwordEncoder.encode(requestDTO.getPassword());
 
         // Recuperación y Validación de Roles
-        Set<Role> roles = requestDTO.getRoleNames().stream()
-            .map(roleName -> roleRepository.findByName(roleName)
-                .orElseThrow(() -> 
+        Role role = roleRepository.findByName(requestDTO.getRole())
+            .orElseThrow(() -> 
                 new ResourceNotFoundException("Role not found: " 
-                + roleName)))
-            .collect(Collectors.toSet());
+                + requestDTO.getRole()));
+
+        boolean isTechnician = requestDTO.getRole().equals("TECHNICIAN");
+
+        if (isTechnician && requestDTO.getLabId() == null) {
+            throw new IllegalArgumentException("Lab ID is required for a TECHNICIAN role.");
+        }
+        if (!isTechnician && requestDTO.getLabId() != null) {
+            requestDTO.setLabId(null); 
+        }
         
         // Mapeo DTO a Entidad (User)
         User user = User.builder()
@@ -59,7 +68,8 @@ public class UserService implements IUserService {
                 .passwordHash(hashedPassword)
                 .isActive(requestDTO.getIsActive() != null ? requestDTO.getIsActive() : "Y") // Default 'Y'
                 .createdAt(ZonedDateTime.now())
-                .roles(roles)
+                .roles(Set.of(role))
+                .labId(requestDTO.getLabId())
                 .build();
 
         // Guardar en Base de Datos
@@ -80,6 +90,35 @@ public class UserService implements IUserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
 
         return mapToResponseDTO(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserResponseDTO> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .filter(user -> user.getRoles()
+                    .stream()
+                    .anyMatch(
+                        role -> role.getName().equals("PATIENT") || 
+                        role.getName().equals("TECHNICIAN")
+                    )
+                )
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserResponseDTO> getAllPatients() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .filter(user -> user.getRoles()
+                    .stream()
+                    .anyMatch(
+                        role -> role.getName().equals("PATIENT")
+                    )
+                )
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -104,7 +143,9 @@ public class UserService implements IUserService {
         // Actualizar campos
         existingUser.setFullName(requestDTO.getFullName());
         existingUser.setEmail(requestDTO.getEmail());
-        existingUser.setIsActive(requestDTO.getIsActive());
+
+        if (requestDTO.getIsActive() != null)
+            existingUser.setIsActive(requestDTO.getIsActive());
 
         // Actualizar Contraseña (Opcional): Solo si se proporciona una nueva contraseña
         if (requestDTO.getPassword() != null && !requestDTO.getPassword().trim().isEmpty()) {
@@ -113,12 +154,12 @@ public class UserService implements IUserService {
         }
 
         // Actualizar Roles
-        Set<Role> newRoles = requestDTO.getRoleNames().stream()
-            .map(roleName -> roleRepository.findByName(roleName)
-                .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + roleName)))
-            .collect(Collectors.toSet());
+        Role newRole = roleRepository.findByName(requestDTO.getRole())
+            .orElseThrow(() -> 
+                new ResourceNotFoundException("Role not found: " 
+                + requestDTO.getRole()));
             
-        existingUser.setRoles(newRoles);
+        existingUser.setRoles(new HashSet<>(Set.of(newRole)));
 
         // Guardar y retornar
         User updatedUser = userRepository.save(existingUser);
@@ -151,6 +192,7 @@ public class UserService implements IUserService {
                 .isActive(user.getIsActive())
                 .createdAt(user.getCreatedAt())
                 .roles(roleNames)
+                .labId(user.getLabId())
                 .build();
     }
 }

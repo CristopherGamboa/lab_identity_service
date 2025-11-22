@@ -2,7 +2,6 @@ package com.example.lab_identity_service.lab_identity_service.dtos;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -19,14 +18,16 @@ public class UserRequestDTO {
     @Size(max = 100, message = "Email must be less than 100 characters")
     private String email;
 
-    @Size(min = 8, message = "Password must be at least 8 characters long")
-    @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$", 
-             message = "Password must contain letters and numbers")
+    @Size(min = 6, message = "Password must be at least 6 characters long")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_])\\S+$", 
+             message = "Password must contain letters, numbers, and special characters")
     private String password; // Se usará para generar el passwordHash
 
     @NotEmpty(message = "User must have at least one role assigned")
-    private Set<String> roleNames; // Nombres de los roles (ej: "ADMIN", "PATIENT")
+    private String role; 
 
     @Pattern(regexp = "[YN]", message = "IsActive must be 'Y' or 'N'")
     private String isActive;
+
+    private Long LabId;
 }

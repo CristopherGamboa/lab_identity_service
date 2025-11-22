@@ -42,4 +42,7 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "ROLE_ID")
     )
     private Set<Role> roles = new HashSet<>();
+
+    @Column(name = "LAB_ID", nullable = true)
+    private Long labId;
 }

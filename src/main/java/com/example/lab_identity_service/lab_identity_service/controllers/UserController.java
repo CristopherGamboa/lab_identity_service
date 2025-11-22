@@ -3,6 +3,9 @@ package com.example.lab_identity_service.lab_identity_service.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,6 +36,21 @@ public class UserController {
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
         UserResponseDTO user = userService.getUserById(id);
         return ResponseEntity.ok(user);
+    }
+
+    // READ (Obtener Usuarios) - SOLO ADMIN
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+        List<UserResponseDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/patients")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserResponseDTO>> getAllPatients() {
+        List<UserResponseDTO> users = userService.getAllPatients();
+        return ResponseEntity.ok(users);
     }
 
     // UPDATE (Modificar Usuario) - SOLO ADMIN

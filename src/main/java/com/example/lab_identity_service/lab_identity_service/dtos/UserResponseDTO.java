@@ -16,4 +16,5 @@ public class UserResponseDTO {
     private Set<String> roles;
     private String isActive;
     private ZonedDateTime createdAt;
+    private Long labId;
 }
