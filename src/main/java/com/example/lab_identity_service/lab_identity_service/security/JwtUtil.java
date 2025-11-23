@@ -39,7 +39,7 @@ public class JwtUtil {
     /**
      * Genera un token JWT incluyendo roles y el ID del usuario en los claims.
      */
-    public String generateToken(UserDetails userDetails, Long userId) {
+    public String generateToken(UserDetails userDetails, Long userId, Long labId) {
         
         // Obtener roles en formato String, separados por coma (ej: "ROLE_ADMIN,ROLE_PATIENT")
         String roles = userDetails.getAuthorities().stream()
@@ -49,6 +49,7 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", roles);
         claims.put("userId", userId); // ID del usuario, crucial para otros microservicios
+        claims.put("labId", labId);
         
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);

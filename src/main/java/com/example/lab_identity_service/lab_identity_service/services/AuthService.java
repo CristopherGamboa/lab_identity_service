@@ -48,7 +48,7 @@ public class AuthService implements IAuthService {
             .orElseThrow(() -> new AuthenticationException("Could not find user details after successful authentication."));
         
         // Generar el JWT
-        String jwtToken = jwtUtil.generateToken(userDetails, user.getId());
+        String jwtToken = jwtUtil.generateToken(userDetails, user.getId(), user.getLabId());
 
         // Mapear y devolver el DTO de Respuesta
         Set<String> roles = user.getRoles().stream()
